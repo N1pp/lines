@@ -71,7 +71,7 @@
                         countX++;
                     } else {
                         if (countX >= 5) {
-                            for (let j = i - countX + 1; j < i; j++) {
+                            for (let j = i - countX; j < i; j++) {
                                 this.area[x][j] = 0;
                                 this.$forceUpdate()
                             }
@@ -156,7 +156,7 @@
 
             searchDescLines() {
                 // for (let i = 0; i < 9; i++) {
-                    // let value = 0;
+                // let value = 0;
                 // for (let j = 0; j + i < 9; j++) {
                 //     setTimeout(() => {
                 //         this.area[j + i][j] = i + 1
@@ -172,20 +172,26 @@
                         if (value == this.area[j][i - j]) {
                             countD++;
                         } else {
-                            if (countD > 4 && value != 0){
-                                // eslint-disable-next-line no-console
-                                console.log('DELETE'); // TODO delete me
-                                for (let k = j - 1, h = i - j + 1;k > j - countD;k--,h++){
-                                    // eslint-disable-next-line no-console
-                                    console.log('k ', k); // TODO delete me
-                                    // eslint-disable-next-line no-console
-                                    console.log('h ', h); // TODO delete me
+                            if (countD > 4 && value != 0) {
+                                for (let k = j - 1, h = i - j + 1; k > j - countD - 1; k--, h++) {
                                     this.area[k][h] = 0;
                                     this.$forceUpdate()
                                 }
                             }
                             value = this.area[j][i - j];
                             countD = 1;
+                        }
+                    }
+                    if (countD > 4 && value != 0) {
+                        // eslint-disable-next-line no-console
+                        console.log('DELETE'); // TODO delete me
+                        for (let k = i, h = 0; k > i - countD; h++, k--) {
+                            // eslint-disable-next-line no-console
+                            console.log('k ', k); // TODO delete me
+                            // eslint-disable-next-line no-console
+                            console.log('h ', h); // TODO delete me
+                            this.area[h][k] = 0;
+                            this.$forceUpdate()
                         }
                     }
                 }
@@ -231,8 +237,7 @@
                         setted = true
                     }
                 }
-                this.searchForAscendingLines();
-                this.searchDescLines();
+
             },
 
             getFreeCelsCount() {
@@ -251,7 +256,8 @@
                 this.setRandomBall()
                 this.setRandomBall()
                 this.setRandomBall()
-
+                this.searchForAscendingLines();
+                this.searchDescLines();
                 this.$forceUpdate()
             },
 
