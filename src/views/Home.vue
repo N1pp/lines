@@ -1,6 +1,7 @@
 <template>
     <div class="home">
-        Your score: {{ score }}
+        <p>Your best score : {{ highScore }}</p>
+        <p>Your score: {{ score }}</p>
         <div v-for="(i, row) in area" :key="`row-${row}`" class="g-row">
             <div
                     v-for="(j, col) in area[row]"
@@ -26,6 +27,7 @@
             return {
                 area: [],
                 selected_ball: null,
+                highScore: 0,
                 score: 0,
                 status: 'ALIVE'
             }
@@ -40,6 +42,8 @@
                 this.status = 'ALIVE';
                 this.initArea();
                 this.setRandomBalls();
+                if (this.score > this.highScore)
+                    this.highScore = this.score;
                 this.score = 0;
             },
 
@@ -149,10 +153,10 @@
             },
 
             example() {
-                for (let k = 0; k < 9; k++) {
-                    for (let i = 8, j = k; i >= k; j++, i--) {
+                for (let k = 8; k >= 0; k--) {
+                    for (let i = 0; i <= k; i++) {
                         setTimeout(() => {
-                            this.area[i][j] = k + 1;
+                            this.area[i][k - i] = k + 1;
                             this.$forceUpdate()
                         }, k * 500)
                     }
@@ -235,6 +239,13 @@
                             value = this.area[j][i - j];
                             countD = 1;
                         }
+                    }
+                    if (countD > 4 && value != 0) {
+                        for (let k = 0, h = i; k < countD; h--, k++) {
+                            this.area[h][k] = 0;
+                            this.$forceUpdate()
+                        }
+                        this.score += countD;
                     }
                     countD = 1;
                 }
