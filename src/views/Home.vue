@@ -8,6 +8,7 @@
                     :key="`col-${col}`"
                     :class="['g-col', 'g-ball-' + area[row][col]]"
                     @click="handleBallClick(row, col)"
+
             >
                 {{area[row][col]}}
             </div>
@@ -313,7 +314,7 @@
                     let i = this.getRandom(0, 8);
                     let j = this.getRandom(0, 8);
                     if (this.area[i][j] == 0) {
-                        this.area[i][j] = this.getRandom(1, 4);
+                        this.area[i][j] = this.getRandom(1, 6);
                         setted = true;
                     }
                 }
@@ -396,8 +397,9 @@
     .g-col {
         display: inline-block;
         text-align: center;
-        width: 20px;
-        height: 20px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50px;
     }
 
     .g-ball-1 {
@@ -414,5 +416,13 @@
 
     .g-ball-4 {
         background: yellow;
+    }
+
+    .g-ball-5 {
+        background: darkred;
+    }
+
+    .g-ball-6 {
+        background: orangered;
     }
 </style>
