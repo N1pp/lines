@@ -1,5 +1,6 @@
 <template>
     <div class="home">
+        Your score: {{ score }}
         <div v-for="(i, row) in area" :key="`row-${row}`" class="g-row">
             <div
                     v-for="(j, col) in area[row]"
@@ -12,6 +13,7 @@
         </div>
 
         <button @click="setRandomBalls">Set balls</button>
+        <button @click="restart">Restart</button>
     </div>
 </template>
 
@@ -23,79 +25,136 @@
         data() {
             return {
                 area: [],
-                selected_ball: null
+                selected_ball: null,
+                score: 0,
+                status: 'ALIVE'
             }
         },
         created() {
-            this.initArea()
-            this.setRandomBalls()
+            this.initArea();
+            this.setRandomBalls();
         },
         methods: {
+
+            restart() {
+                this.status = 'ALIVE';
+                this.initArea();
+                this.setRandomBalls();
+                this.score = 0;
+            },
+
             getRandom(min, max) {
-                min = Math.ceil(min)
-                max = Math.floor(max)
-                return Math.floor(Math.random() * (max - min + 1)) + min
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            },
+
+            checkWall(x1, y1, map) {
+                map[x1][y1] = 1;
+                if (x1 + 1 < 9 && map[x1 + 1][y1] != 'w' && map[x1 + 1][y1] != 1) {
+                    map = this.checkWall(x1 + 1, y1, map);
+                }
+                if (y1 + 1 < 9 && map[x1][y1 + 1] != 'w' && map[x1][y1 + 1] != 1) {
+                    map = this.checkWall(x1, y1 + 1, map);
+                }
+                if (y1 - 1 >= 0 && map[x1][y1 - 1] != 'w' && map[x1][y1 - 1] != 1) {
+                    map = this.checkWall(x1, y1 - 1, map);
+                }
+                if (x1 - 1 >= 0 && map[x1 - 1][y1] != 'w' && map[x1 - 1][y1] != 1) {
+                    map = this.checkWall(x1 - 1, y1, map);
+                }
+                return map;
             },
 
             moveBalls(x1, y1, x2, y2) {
+                let arr = [];
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        if (!arr[i])
+                            arr[i] = [];
+                        if (this.area[i][j] != 0) {
+                            arr[i][j] = 'w';
+                        } else {
+                            arr[i][j] = 0
+                        }
 
-                if (this.area[x1][y1] == 0) return false
-                if (this.area[x2][y2] != 0) return false
+                    }
+                }
+                arr[x1][y1] = 1;
 
-                this.area[x2][y2] = this.area[x1][y1]
-                this.area[x1][y1] = 0
+                if (this.area[x1][y1] == 0) return false;
+                if (this.area[x2][y2] != 0) return false;
 
-                this.checkLine(x2, y2);
-                return true
+                let map = this.checkWall(x1, y1, arr);
+                if (map[x2][y2] == 1) {
+                    this.area[x2][y2] = this.area[x1][y1];
+                    this.area[x1][y1] = 0;
+                    return true;
+                }
             },
 
-            checkLine(x, y) {
-                let value = this.area[x][y]
-                let countX = 0;
-                let countY = 0;
+            checkLine() {
+                let count = 0;
                 for (let i = 0; i < 9; i++) {
-                    if (this.area[i][y] == value) {
-                        countY++;
-                    } else {
-                        if (countY >= 5) {
-                            this.removeLinesX(y, i - countY, i);
-                        }
-                        countY = 0;
-                    }
-                }
-                if (countY >= 5) {
-                    this.removeLinesX(y, 9 - countY, 9);
-                }
-                for (let i = 0; i < 9; i++) {
-                    if (this.area[x][i] == value) {
-                        countX++;
-                    } else {
-                        if (countX >= 5) {
-                            for (let j = i - countX; j < i; j++) {
-                                this.area[x][j] = 0;
-                                this.$forceUpdate()
+                    let value = 0;
+                    for (let j = 0; j < 9; j++) {
+                        if (this.area[i][j] == value) {
+                            count++;
+                        } else {
+                            if (count > 4 && value != 0) {
+                                for (let k = j - count; k < j; k++) {
+                                    this.area[i][k] = 0;
+                                    this.$forceUpdate();
+                                }
+                                this.score += count;
                             }
+                            value = this.area[i][j];
+                            count = 1;
                         }
-                        countX = 0;
+                    }
+                    if (count > 4 && value != 0) {
+                        for (let k = 9 - count; k <= 8; k++) {
+                            this.area[i][k] = 0;
+                            this.$forceUpdate();
+                        }
+                        this.score += count;
                     }
                 }
-                if (countX >= 5) {
-                    for (let j = 8 - countX; j < 9; j++) {
-                        this.area[x][j] = 0;
-                        this.$forceUpdate()
+                count = 0;
+                for (let i = 0; i < 9; i++) {
+                    let value = 0;
+                    for (let j = 0; j < 9; j++) {
+                        if (this.area[j][i] == value) {
+                            count++;
+                        } else {
+                            if (count > 4 && value != 0) {
+                                for (let k = j - count; k < j; k++) {
+                                    this.area[k][i] = 0;
+                                    this.$forceUpdate();
+                                }
+                                this.score += count;
+                            }
+                            value = this.area[j][i];
+                            count = 1;
+                        }
+                    }
+                    if (count > 4 && value != 0) {
+                        for (let k = 9 - count; k < 9; k++) {
+                            this.area[k][i] = 0;
+                            this.$forceUpdate();
+                        }
+                        this.score += count;
                     }
                 }
-
             },
 
             example() {
-                for (let i = 0; i < 9; i++) {
-                    // let value = 0;
-                    for (let j = 0; j + i < 9; j++) {
+                for (let k = 0; k < 9; k++) {
+                    for (let i = 8, j = k; i >= k; j++, i--) {
                         setTimeout(() => {
-                            this.area[j + i][j] = i + 1
+                            this.area[i][j] = k + 1;
                             this.$forceUpdate()
-                        }, i * 500)
+                        }, k * 500)
                     }
                 }
             },
@@ -111,8 +170,9 @@
                             if (countD > 4 && value != 0) {
                                 for (let k = i + j - countD, h = j - countD; k < i + j; h++, k++) {
                                     this.area[k][h] = 0;
-                                    this.$forceUpdate()
+                                    this.$forceUpdate();
                                 }
+                                this.score += countD;
                             }
                             value = this.area[j + i][j];
                             countD = 1;
@@ -121,8 +181,9 @@
                     if (countD > 4 && value != 0) {
                         for (let k = i, h = 0; k < 9; h++, k++) {
                             this.area[k][h] = 0;
-                            this.$forceUpdate()
+                            this.$forceUpdate();
                         }
+                        this.score += countD;
                     }
                     countD = 1;
                 }
@@ -137,8 +198,9 @@
                             if (countD > 4 && value != 0) {
                                 for (let k = j - countD, h = i + j - countD; k < 8 - i; h++, k++) {
                                     this.area[k][h] = 0;
-                                    this.$forceUpdate()
+                                    this.$forceUpdate();
                                 }
+                                this.score += countD;
                             }
                             value = this.area[j][j + i];
                             countD = 1;
@@ -147,24 +209,15 @@
                     if (countD > 4 && value != 0) {
                         for (let k = i, h = 0; k < 9; h++, k++) {
                             this.area[h][k] = 0;
-                            this.$forceUpdate()
+                            this.$forceUpdate();
                         }
+                        this.score += countD;
                     }
                     countD = 1;
                 }
             },
 
             searchDescLines() {
-                // for (let i = 0; i < 9; i++) {
-                // let value = 0;
-                // for (let j = 0; j + i < 9; j++) {
-                //     setTimeout(() => {
-                //         this.area[j + i][j] = i + 1
-                //         this.$forceUpdate()
-                //     }, i * 500)
-                // }
-                // }
-
                 let countD = 1;
                 for (let i = 8; i >= 0; i--) {
                     let value = 0;
@@ -173,55 +226,71 @@
                             countD++;
                         } else {
                             if (countD > 4 && value != 0) {
-                                for (let k = j - 1, h = i - j + 1; k > j - countD - 1; k--, h++) {
+                                for (let k = j - 1, h = i - k; k > j - countD - 1; k--, h++) {
                                     this.area[k][h] = 0;
-                                    this.$forceUpdate()
+                                    this.$forceUpdate();
                                 }
+                                this.score += countD;
                             }
                             value = this.area[j][i - j];
                             countD = 1;
                         }
                     }
-                    if (countD > 4 && value != 0) {
-                        // eslint-disable-next-line no-console
-                        console.log('DELETE'); // TODO delete me
-                        for (let k = i, h = 0; k > i - countD; h++, k--) {
-                            // eslint-disable-next-line no-console
-                            console.log('k ', k); // TODO delete me
-                            // eslint-disable-next-line no-console
-                            console.log('h ', h); // TODO delete me
-                            this.area[h][k] = 0;
-                            this.$forceUpdate()
+                    countD = 1;
+                }
+                countD = 1;
+                for (let k = 0; k < 9; k++) {
+                    let value = 0;
+                    for (let i = 8, j = k; i >= k; j++, i--) {
+                        if (value == this.area[i][j]) {
+                            countD++;
+                        } else {
+                            if (countD > 4 && value != 0) {
+                                for (let x = i + countD, y = j - countD; y < j; x--, y++) {
+                                    this.area[x][y] = 0;
+                                    this.$forceUpdate();
+                                }
+                                this.score += countD;
+                            }
+                            value = this.area[i][j];
+                            countD = 1;
                         }
                     }
-                }
 
+                    if (countD > 4 && value != 0) {
+                        for (let x = k + countD - 1, y = 8 - countD + 1; y <= 8; x--, y++) {
+                            this.area[x][y] = 0;
+                            this.$forceUpdate();
+                        }
+                        this.score += countD;
+                    }
+                    countD = 1;
+                }
             },
 
             removeLinesX(row, beg, end) {
                 for (let i = beg; i < end; i++) {
                     this.area[i][row] = 0;
-                    this.$forceUpdate()
+                    this.$forceUpdate();
                 }
             },
 
             addTestBalls() {
-                this.area[3][2] = 1
-                this.area[4][3] = 1
-                this.area[5][4] = 1
-                this.area[6][5] = 1
-                this.area[7][6] = 1
+                this.area[3][2] = 1;
+                this.area[4][3] = 1;
+                this.area[5][4] = 1;
+                this.area[6][5] = 1;
+                this.area[7][6] = 1;
 
                 // this.example()
-                this.searchDescLines()
+                // this.searchDescLines()
             },
 
             setRandomBall() {
-                // eslint-disable-next-line no-console
-                console.log('');
                 var setted = false
 
                 if (this.getFreeCelsCount() < 3) {
+                    this.status = 'LOSE'
                     // eslint-disable-next-line no-console
                     console.log('GAME OVER!')
                     // eslint-disable-next-line no-console
@@ -230,11 +299,11 @@
                 }
 
                 while (!setted) {
-                    let i = this.getRandom(0, 8)
-                    let j = this.getRandom(0, 8)
+                    let i = this.getRandom(0, 8);
+                    let j = this.getRandom(0, 8);
                     if (this.area[i][j] == 0) {
-                        this.area[i][j] = this.getRandom(1, 4)
-                        setted = true
+                        this.area[i][j] = this.getRandom(1, 4);
+                        setted = true;
                     }
                 }
 
@@ -245,7 +314,7 @@
                 for (var i = 0; i < 9; i++) {
                     for (var j = 0; j < 9; j++) {
                         if (this.area[i][j] == 0)
-                            count++
+                            count++;
                     }
                 }
 
@@ -253,48 +322,54 @@
             },
 
             setRandomBalls() {
-                this.setRandomBall()
-                this.setRandomBall()
-                this.setRandomBall()
+                if (this.status == 'LOSE') {
+                    alert('Game over');
+                    return
+                }
+                this.setRandomBall();
+                this.setRandomBall();
+                this.setRandomBall();
                 this.searchForAscendingLines();
                 this.searchDescLines();
-                this.$forceUpdate()
+                this.checkLine();
+                this.$forceUpdate();
             },
 
             initArea() {
-                this.area = []
+                this.area = [];
                 for (var i = 0; i < 9; i++) {
                     for (var j = 0; j < 9; j++) {
                         if (!this.area[i])
-                            this.area[i] = []
+                            this.area[i] = [];
                         this.area[i][j] = 0
                     }
                 }
-
-                this.addTestBalls()
-                this.$forceUpdate()
+                this.$forceUpdate();
             },
 
             handleBallClick(x, y) {
-                // eslint-disable-next-line no-console
-                console.log(`${x} / ${y}`)
-
+                if (this.status == 'LOSE') {
+                    alert('Game over');
+                    return
+                }
                 if (!this.selected_ball) {
                     this.selected_ball = [x, y]
                 } else {
-                    if (this.moveBalls(
-                        this.selected_ball[0],
-                        this.selected_ball[1],
-                        x, y
-                    )) {
-                        this.selected_ball = null
-                        this.setRandomBalls()
-                        this.$nextTick(() => {
-                            this.$forceUpdate()
-                        })
+                    if (this.area[x][y] == 0) {
+                        if (this.moveBalls(
+                            this.selected_ball[0],
+                            this.selected_ball[1],
+                            x, y
+                        )) {
+                            this.selected_ball = null;
+                            this.setRandomBalls();
+                            this.$nextTick(() => {
+                                this.$forceUpdate()
+                            })
+                        }
                     } else {
-                        // eslint-disable-next-line no-console
-                        console.log('Can\'t move!')
+                        this.selected_ball = null;
+                        this.selected_ball = [x, y];
                     }
                 }
             }
