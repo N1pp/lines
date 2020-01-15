@@ -2,18 +2,21 @@
     <div class="home">
         <p>Your best score : {{ highScore }}</p>
         <p>Your score: {{ score }}</p>
-        <div v-for="(i, row) in area" :key="`row-${row}`" class="g-row">
-            <div
-                    v-for="(j, col) in area[row]"
-                    :key="`col-${col}`"
-                    :class="['g-col', 'g-ball-' + area[row][col]]"
-                    @click="handleBallClick(row, col)"
-
-            >
-                {{area[row][col]}}
+        <div class="board">
+            <div v-for="(i, row) in area" :key="`row-${row}`" class="g-row">
+                <div
+                        :id="col + ' ' + row"
+                        v-for="(j, col) in area[row]"
+                        :key="`col-${col}`"
+                        style="display: inline-block;border:black solid 1px;width: 10%;height: 50px"
+                >
+                    <div
+                            :class="['g-col', 'g-ball-' + area[row][col]]"
+                            @click="handleBallClick(row, col)"
+                    ></div>
+                </div>
             </div>
         </div>
-
         <button @click="setRandomBalls">Set balls</button>
         <button @click="restart">Restart</button>
     </div>
@@ -194,6 +197,8 @@
                 }
 
                 countD = 1;
+                let array = [1,2,3];
+                array.forEach()
                 for (let i = 0; i < 9; i++) {
                     let value = 0;
                     for (let j = 0; j + i < 9; j++) {
@@ -364,8 +369,9 @@
                     alert('Game over');
                     return
                 }
-                if (!this.selected_ball) {
-                    this.selected_ball = [x, y]
+                if (!this.selected_ball && this.area[x][y] != 0) {
+                    this.selected_ball = [x, y];
+                    document.getElementById(y + ' ' + x).style.background = 'cadetblue';
                 } else {
                     if (this.area[x][y] == 0) {
                         if (this.moveBalls(
@@ -373,6 +379,7 @@
                             this.selected_ball[1],
                             x, y
                         )) {
+                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.background = 'white';
                             this.selected_ball = null;
                             this.setRandomBalls();
                             this.$nextTick(() => {
@@ -380,8 +387,10 @@
                             })
                         }
                     } else {
+                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.background = 'white';
                         this.selected_ball = null;
                         this.selected_ball = [x, y];
+                        document.getElementById(y + ' ' + x).style.background = 'cadetblue';
                     }
                 }
             }
@@ -390,6 +399,13 @@
 </script>
 
 <style>
+    .board {
+        margin: auto;
+        width: 30%;
+        border-style: solid;
+        border-color: black;
+    }
+
     .g-row {
 
     }
@@ -397,9 +413,9 @@
     .g-col {
         display: inline-block;
         text-align: center;
-        width: 50px;
-        height: 50px;
-        border-radius: 50px;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
     }
 
     .g-ball-1 {
@@ -419,10 +435,10 @@
     }
 
     .g-ball-5 {
-        background: darkred;
+        background: orange;
     }
 
     .g-ball-6 {
-        background: orangered;
+        background: deepskyblue;
     }
 </style>
