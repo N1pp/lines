@@ -5,12 +5,13 @@
         <div class="board">
             <div v-for="(i, row) in area" :key="`row-${row}`" class="g-row">
                 <div
-                        :id="col + ' ' + row"
+                        :id="col + ' ' + row + 'block'"
                         v-for="(j, col) in area[row]"
                         :key="`col-${col}`"
                         style="display: inline-block;border:black solid 1px;width: 10%;height: 50px"
                 >
                     <div
+                            :id="col + ' ' + row"
                             :class="['g-col', 'g-ball-' + area[row][col]]"
                             @click="handleBallClick(row, col)"
                     ></div>
@@ -33,19 +34,27 @@
                 selected_ball: null,
                 highScore: 0,
                 score: 0,
-                status: 'ALIVE'
+                status: 'ALIVE',
+                toAppear: [],
             }
         },
         created() {
             this.initArea();
-            this.setRandomBalls();
+            this.setRandomBall();
+            this.setRandomBall();
+            this.setRandomBall();
         },
         methods: {
 
             restart() {
                 this.status = 'ALIVE';
                 this.initArea();
-                this.setRandomBalls();
+                this.setRandomBall();
+                this.setRandomBall();
+                this.setRandomBall();
+                this.setFutureBall();
+                this.setFutureBall();
+                this.setFutureBall();
                 if (this.score > this.highScore)
                     this.highScore = this.score;
                 this.score = 0;
@@ -324,6 +333,33 @@
 
             },
 
+            setFutureBall() {
+                var setted = false
+
+                if (this.getFreeCelsCount() < 3) {
+                    this.status = 'LOSE'
+                    // eslint-disable-next-line no-console
+                    console.log('GAME OVER!')
+                    // eslint-disable-next-line no-console
+                    console.log('Free: ' + this.getFreeCelsCount())
+                    return
+                }
+
+                while (!setted) {
+                    let i = this.getRandom(0, 8);
+                    let j = this.getRandom(0, 8);
+                    if (this.area[i][j] == 0) {
+                        this.area[i][j] = this.getRandom(1, 6);
+                        this.toAppear[this.toAppear.length] = [i, j]
+                        document.getElementById(j + ' ' + i).style.width = '50%';
+                        document.getElementById(j + ' ' + i).style.height = '50%';
+                        document.getElementById(j + ' ' + i).style.margin = '25%';
+                        setted = true;
+                    }
+                }
+
+            },
+
             getFreeCelsCount() {
                 var count = 0;
                 for (var i = 0; i < 9; i++) {
@@ -341,13 +377,23 @@
                     alert('Game over');
                     return
                 }
-                this.setRandomBall();
-                this.setRandomBall();
-                this.setRandomBall();
+                this.setFutureBalls();
+                this.setFutureBall();
+                this.setFutureBall();
+                this.setFutureBall();
                 this.searchForAscendingLines();
                 this.searchDescLines();
                 this.checkLine();
                 this.$forceUpdate();
+            },
+
+            setFutureBalls() {
+                while (this.toAppear.length != 0) {
+                    let ball = this.toAppear.pop();
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.width = '100%';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.height = '100%';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.margin = '0%';
+                }
             },
 
             initArea() {
@@ -369,7 +415,7 @@
                 }
                 if (!this.selected_ball && this.area[x][y] != 0) {
                     this.selected_ball = [x, y];
-                    document.getElementById(y + ' ' + x).style.background = 'cadetblue';
+                    document.getElementById(y + ' ' + x + 'block').style.background = 'cadetblue';
                 } else {
                     if (this.area[x][y] == 0) {
                         if (this.moveBalls(
@@ -377,7 +423,7 @@
                             this.selected_ball[1],
                             x, y
                         )) {
-                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.background = 'white';
+                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
                             this.selected_ball = null;
                             this.setRandomBalls();
                             this.$nextTick(() => {
@@ -385,12 +431,41 @@
                             })
                         }
                     } else {
-                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.background = 'white';
-                        this.selected_ball = null;
-                        this.selected_ball = [x, y];
-                        document.getElementById(y + ' ' + x).style.background = 'cadetblue';
+                        if(this.checkInFuture(x,y) == false){
+                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
+                            this.selected_ball = null;
+                            this.selected_ball = [x, y];
+                            document.getElementById(y + ' ' + x + 'block').style.background = 'cadetblue';
+                        } else {
+                            if (this.moveBalls(
+                                this.selected_ball[0],
+                                this.selected_ball[1],
+                                x, y
+                            )) {
+                                let id = this.checkInFuture(x,y);
+                                document.getElementById(this.selected_ball[id][1] + ' ' + this.toAppear[id][0]).style.width = '100%';
+                                document.getElementById(this.selected_ball[id][1] + ' ' + this.toAppear[id][0]).style.height = '100%';
+                                document.getElementById(this.selected_ball[id][1] + ' ' + this.toAppear[id][0]).style.margin = '0%';
+                                this.toAppear.splice(id,1);
+                                document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
+                                this.selected_ball = null;
+                                this.setRandomBalls();
+                                this.$nextTick(() => {
+                                    this.$forceUpdate()
+                                })
+                            }
+                        }
                     }
                 }
+            },
+
+
+            checkInFuture(x, y) {
+                for (let i = 0; i < this.toAppear.length; i++) {
+                    if (this.toAppear[i][0] == x && this.toAppear[i][1] == y)
+                        return i;
+                }
+                return false;
             }
         }
     }
@@ -399,7 +474,7 @@
 <style>
     .board {
         margin: auto;
-        width: 30%;
+        width: 500px;
         border-style: solid;
         border-color: black;
     }
@@ -417,25 +492,31 @@
 
     .g-ball-1 {
         background: red;
+        box-shadow: inset 6px 6px 7px 15px #42424238, inset 6px 6px 10px 5px #2b2a2a7d;
     }
 
     .g-ball-2 {
         background: green;
+        box-shadow: inset 6px 6px 7px 15px #42424238, inset 6px 6px 10px 5px #2b2a2a7d;
     }
 
     .g-ball-3 {
         background: blue;
+        box-shadow: inset 6px 6px 7px 15px #42424238, inset 6px 6px 10px 5px #2b2a2a7d;
     }
 
     .g-ball-4 {
         background: yellow;
+        box-shadow: inset 6px 6px 7px 15px #42424238, inset 6px 6px 10px 5px #2b2a2a7d;
     }
 
     .g-ball-5 {
         background: orange;
+        box-shadow: inset 6px 6px 7px 15px #42424238, inset 6px 6px 10px 5px #2b2a2a7d;
     }
 
     .g-ball-6 {
         background: deepskyblue;
+        box-shadow: inset 6px 6px 7px 15px #42424238, inset 6px 6px 10px 5px #2b2a2a7d;
     }
 </style>
