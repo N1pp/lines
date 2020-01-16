@@ -197,8 +197,6 @@
                 }
 
                 countD = 1;
-                let array = [1,2,3];
-                array.forEach()
                 for (let i = 0; i < 9; i++) {
                     let value = 0;
                     for (let j = 0; j + i < 9; j++) {
@@ -412,7 +410,6 @@
 
     .g-col {
         display: inline-block;
-        text-align: center;
         width: 100%;
         height: 100%;
         border-radius: 50%;
