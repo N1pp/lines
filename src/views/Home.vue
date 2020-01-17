@@ -8,7 +8,7 @@
                         :id="col + ' ' + row + 'block'"
                         v-for="(j, col) in area[row]"
                         :key="`col-${col}`"
-                        style="display: inline-block;border:black solid 1px;width: 10%;height: 50px"
+                        class="box"
                 >
                     <div
                             :id="col + ' ' + row"
@@ -47,8 +47,17 @@
         methods: {
 
             restart() {
+                this.selected_ball = null;
                 this.status = 'ALIVE';
                 this.initArea();
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        document.getElementById(i + ' ' + j).style.width = '100%';
+                        document.getElementById(i + ' ' + j).style.height = '100%';
+                        document.getElementById(i + ' ' + j).style.margin = '0%';
+                        document.getElementById(i + ' ' + j + 'block').style.background = 'white';
+                    }
+                }
                 this.setRandomBall();
                 this.setRandomBall();
                 this.setRandomBall();
@@ -89,7 +98,7 @@
                     for (let j = 0; j < 9; j++) {
                         if (!arr[i])
                             arr[i] = [];
-                        if (this.area[i][j] != 0) {
+                        if (this.area[i][j] != 0 && this.checkInFuture(i, j) == 9) {
                             arr[i][j] = 'w';
                         } else {
                             arr[i][j] = 0
@@ -100,7 +109,6 @@
                 arr[x1][y1] = 1;
 
                 if (this.area[x1][y1] == 0) return false;
-                if (this.area[x2][y2] != 0) return false;
 
                 let map = this.checkWall(x1, y1, arr);
                 if (map[x2][y2] == 1) {
@@ -115,7 +123,7 @@
                 for (let i = 0; i < 9; i++) {
                     let value = 0;
                     for (let j = 0; j < 9; j++) {
-                        if (this.area[i][j] == value) {
+                        if (this.area[i][j] == value && this.checkInFuture(i, j) == 9) {
                             count++;
                         } else {
                             if (count > 4 && value != 0) {
@@ -141,7 +149,7 @@
                 for (let i = 0; i < 9; i++) {
                     let value = 0;
                     for (let j = 0; j < 9; j++) {
-                        if (this.area[j][i] == value) {
+                        if (this.area[j][i] == value && this.checkInFuture(j, i) == 9) {
                             count++;
                         } else {
                             if (count > 4 && value != 0) {
@@ -181,7 +189,7 @@
                 for (let i = 0; i < 9; i++) {
                     let value = 0;
                     for (let j = 0; j + i < 9; j++) {
-                        if (value == this.area[j + i][j]) {
+                        if (value == this.area[j + i][j] && this.checkInFuture(j + i, j) == 9) {
                             countD++;
                         } else {
                             if (countD > 4 && value != 0) {
@@ -209,7 +217,7 @@
                 for (let i = 0; i < 9; i++) {
                     let value = 0;
                     for (let j = 0; j + i < 9; j++) {
-                        if (value == this.area[j][j + i]) {
+                        if (value == this.area[j][j + i] && this.checkInFuture(j, j + i) == 9) {
                             countD++;
                         } else {
                             if (countD > 4 && value != 0) {
@@ -239,7 +247,7 @@
                 for (let i = 8; i >= 0; i--) {
                     let value = 0;
                     for (let j = 0; j <= i; j++) {
-                        if (value == this.area[j][i - j]) {
+                        if (value == this.area[j][i - j] && this.checkInFuture(j, i - j) == 9) {
                             countD++;
                         } else {
                             if (countD > 4 && value != 0) {
@@ -266,7 +274,7 @@
                 for (let k = 0; k < 9; k++) {
                     let value = 0;
                     for (let i = 8, j = k; i >= k; j++, i--) {
-                        if (value == this.area[i][j]) {
+                        if (value == this.area[i][j] && this.checkInFuture(i, j) == 9) {
                             countD++;
                         } else {
                             if (countD > 4 && value != 0) {
@@ -411,13 +419,34 @@
             handleBallClick(x, y) {
                 if (this.status == 'LOSE') {
                     alert('Game over');
-                    return
+                    return;
                 }
-                if (!this.selected_ball && this.area[x][y] != 0) {
-                    this.selected_ball = [x, y];
-                    document.getElementById(y + ' ' + x + 'block').style.background = 'cadetblue';
-                } else {
-                    if (this.area[x][y] == 0) {
+                if (this.selected_ball) {
+                    if (this.checkInFuture(x, y) != 9) {
+                        if (this.moveBalls(
+                            this.selected_ball[0],
+                            this.selected_ball[1],
+                            x, y
+                        )) {
+                            let dot = this.checkInFuture(x, y);
+                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.width = '100%';
+                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.height = '100%';
+                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.margin = '0%';
+                            this.toAppear.splice(dot, 1);
+                            this.setRandomBall();
+                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
+                            this.selected_ball = null;
+                            this.setRandomBalls();
+                            this.$nextTick(() => {
+                                this.$forceUpdate()
+                            })
+                        }
+                    } else if (this.area[x][y] != 0 && this.checkInFuture(x, y) == 9) {
+                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
+                        this.selected_ball = null;
+                        this.selected_ball = [x, y];
+                        document.getElementById(y + ' ' + x + 'block').style.background = 'cadetblue';
+                    } else if (this.area[x][y] == 0) {
                         if (this.moveBalls(
                             this.selected_ball[0],
                             this.selected_ball[1],
@@ -430,31 +459,11 @@
                                 this.$forceUpdate()
                             })
                         }
-                    } else {
-                        if(this.checkInFuture(x,y) == false){
-                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
-                            this.selected_ball = null;
-                            this.selected_ball = [x, y];
-                            document.getElementById(y + ' ' + x + 'block').style.background = 'cadetblue';
-                        } else {
-                            if (this.moveBalls(
-                                this.selected_ball[0],
-                                this.selected_ball[1],
-                                x, y
-                            )) {
-                                let id = this.checkInFuture(x,y);
-                                document.getElementById(this.selected_ball[id][1] + ' ' + this.toAppear[id][0]).style.width = '100%';
-                                document.getElementById(this.selected_ball[id][1] + ' ' + this.toAppear[id][0]).style.height = '100%';
-                                document.getElementById(this.selected_ball[id][1] + ' ' + this.toAppear[id][0]).style.margin = '0%';
-                                this.toAppear.splice(id,1);
-                                document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
-                                this.selected_ball = null;
-                                this.setRandomBalls();
-                                this.$nextTick(() => {
-                                    this.$forceUpdate()
-                                })
-                            }
-                        }
+                    }
+                } else {
+                    if (this.area[x][y] != 0 && this.checkInFuture(x, y) == 9) {
+                        this.selected_ball = [x, y];
+                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'cadetblue';
                     }
                 }
             },
@@ -465,7 +474,7 @@
                     if (this.toAppear[i][0] == x && this.toAppear[i][1] == y)
                         return i;
                 }
-                return false;
+                return 9;
             }
         }
     }
@@ -475,8 +484,13 @@
     .board {
         margin: auto;
         width: 500px;
-        border-style: solid;
-        border-color: black;
+    }
+
+    .box {
+        display: inline-block;
+        border: black solid 2px;
+        width: 10%;
+        height: 50px
     }
 
     .g-row {
