@@ -188,17 +188,6 @@
                 }
             },
 
-            example() {
-                for (let k = 8; k >= 0; k--) {
-                    for (let i = 0; i <= k; i++) {
-                        setTimeout(() => {
-                            this.area[i][k - i] = k + 1;
-                            this.$forceUpdate()
-                        }, k * 500)
-                    }
-                }
-            },
-
             searchForAscendingLines() {
                 let countD = 1;
                 for (let i = 0; i < 9; i++) {
@@ -358,6 +347,10 @@
                     let j = this.getRandom(0, 8);
                     if (this.area[i][j] == 0) {
                         this.area[i][j] = this.getRandom(1, 6);
+                        document.getElementById(j + ' ' + i).style.animationName = 'appear';
+                        document.getElementById(j + ' ' + i).style.animationDuration = '1s';
+                        document.getElementById(j + ' ' + i).style.animationDirection = 'normal';
+                        document.getElementById(j + ' ' + i).style.animationFillMode = 'forwards';
                         setted = true;
                     }
                 }
@@ -385,6 +378,10 @@
                         document.getElementById(j + ' ' + i).style.width = '50%';
                         document.getElementById(j + ' ' + i).style.height = '50%';
                         document.getElementById(j + ' ' + i).style.margin = '25%';
+                        document.getElementById(j + ' ' + i).style.animationName = 'appear';
+                        document.getElementById(j + ' ' + i).style.animationDuration = '1s';
+                        document.getElementById(j + ' ' + i).style.animationDirection = 'normal';
+                        document.getElementById(j + ' ' + i).style.animationFillMode = 'forwards';
                         setted = true;
                     }
                 }
@@ -410,8 +407,6 @@
                 this.$forceUpdate();
                 switch (this.status) {
                     case 'ALIVE':
-                        // eslint-disable-next-line no-console
-                        console.log('ALIVE!');
                         this.setFutureBalls();
                         this.searchForAscendingLines();
                         this.searchDescLines();
@@ -425,8 +420,6 @@
                         alert('Game over');
                         break;
                     case 'DELETE':
-                        // eslint-disable-next-line no-console
-                        console.log('DELETE!');
                         this.setFutureBalls();
                         this.searchForAscendingLines();
                         this.searchDescLines();
@@ -443,6 +436,10 @@
                     document.getElementById(ball[1] + ' ' + ball[0]).style.width = '80%';
                     document.getElementById(ball[1] + ' ' + ball[0]).style.height = '80%';
                     document.getElementById(ball[1] + ' ' + ball[0]).style.margin = '10%';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.animationName = 'grow';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.animationDuration = '1s';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.animationDirection = 'normal';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.animationFillMode = 'forwards';
                 }
             },
 
@@ -487,7 +484,7 @@
                         document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'none';
                         this.selected_ball = null;
                         this.selected_ball = [x, y];
-                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'pulsing 2s infinite';
+                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'pulsing 2s';
                     } else if (this.area[x][y] == 0) {
                         if (this.moveBalls(
                             this.selected_ball[0],
@@ -581,16 +578,41 @@
 
     @keyframes pulsing {
         0% {
-            -webkit-transform: scale(1.0, 1.0);
             transform: scale(1.0, 1.0);
         }
         50% {
-            -webkit-transform: scale(0.5, 0.5);
             transform: scale(0.5, 0.5);
         }
         100% {
-            -webkit-transform: scale(1.0, 1.0);
             transform: scale(1.0, 1.0);
+        }
+    }
+
+    @keyframes grow {
+        0% {
+            transform: scale(0.625, 0.625);
+        }
+        100% {
+            transform: scale(1, 1);
+        }
+    }
+
+    @keyframes appear {
+        0% {
+            transform: scale(0, 0);
+        }
+        100% {
+            transform: scale(1, 1);
+        }
+    }
+
+    @keyframes disappear {
+        0% {
+            transform: scale(1, 1);
+
+        }
+        100% {
+            transform: scale(0, 0);
         }
     }
 </style>
