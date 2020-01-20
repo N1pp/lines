@@ -9,11 +9,14 @@
                         v-for="(j, col) in area[row]"
                         :key="`col-${col}`"
                         class="box"
+                        @mouseover="over(row, col)"
+                        @mouseout="out(row,col)"
+                        @click="handleBallClick(row, col)"
                 >
                     <div
                             :id="col + ' ' + row"
                             :class="['g-col', 'g-ball-' + area[row][col]]"
-                            @click="handleBallClick(row, col)"
+
                     ></div>
                 </div>
             </div>
@@ -46,16 +49,24 @@
         },
         methods: {
 
+            over(row, col) {
+                document.getElementById(col + ' ' + row + 'block').style.background = 'gray'
+            },
+
+            out(row, col) {
+                document.getElementById(col + ' ' + row + 'block').style.background = 'darkgray';
+            },
+
             restart() {
                 this.selected_ball = null;
                 this.status = 'ALIVE';
                 this.initArea();
                 for (let i = 0; i < 9; i++) {
                     for (let j = 0; j < 9; j++) {
-                        document.getElementById(i + ' ' + j).style.width = '100%';
-                        document.getElementById(i + ' ' + j).style.height = '100%';
-                        document.getElementById(i + ' ' + j).style.margin = '0%';
-                        document.getElementById(i + ' ' + j + 'block').style.background = 'white';
+                        document.getElementById(i + ' ' + j).style.width = '80%';
+                        document.getElementById(i + ' ' + j).style.height = '80%';
+                        document.getElementById(i + ' ' + j).style.margin = '10%';
+                        document.getElementById(i + ' ' + j + 'block').style.background = 'darkgray';
                     }
                 }
                 this.setRandomBall();
@@ -131,6 +142,7 @@
                                     this.area[i][k] = 0;
                                     this.$forceUpdate();
                                 }
+                                this.status = 'DELETE';
                                 this.score += count;
                             }
                             value = this.area[i][j];
@@ -142,6 +154,7 @@
                             this.area[i][k] = 0;
                             this.$forceUpdate();
                         }
+                        this.status = 'DELETE';
                         this.score += count;
                     }
                 }
@@ -157,6 +170,7 @@
                                     this.area[k][i] = 0;
                                     this.$forceUpdate();
                                 }
+                                this.status = 'DELETE';
                                 this.score += count;
                             }
                             value = this.area[j][i];
@@ -168,6 +182,7 @@
                             this.area[k][i] = 0;
                             this.$forceUpdate();
                         }
+                        this.status = 'DELETE';
                         this.score += count;
                     }
                 }
@@ -197,6 +212,7 @@
                                     this.area[k][h] = 0;
                                     this.$forceUpdate();
                                 }
+                                this.status = 'DELETE';
                                 this.score += countD;
                             }
                             value = this.area[j + i][j];
@@ -208,6 +224,7 @@
                             this.area[k][h] = 0;
                             this.$forceUpdate();
                         }
+                        this.status = 'DELETE';
                         this.score += countD;
                     }
                     countD = 1;
@@ -225,6 +242,7 @@
                                     this.area[k][h] = 0;
                                     this.$forceUpdate();
                                 }
+                                this.status = 'DELETE';
                                 this.score += countD;
                             }
                             value = this.area[j][j + i];
@@ -236,6 +254,7 @@
                             this.area[h][k] = 0;
                             this.$forceUpdate();
                         }
+                        this.status = 'DELETE';
                         this.score += countD;
                     }
                     countD = 1;
@@ -255,6 +274,7 @@
                                     this.area[k][h] = 0;
                                     this.$forceUpdate();
                                 }
+                                this.status = 'DELETE';
                                 this.score += countD;
                             }
                             value = this.area[j][i - j];
@@ -266,6 +286,7 @@
                             this.area[h][k] = 0;
                             this.$forceUpdate()
                         }
+                        this.status = 'DELETE';
                         this.score += countD;
                     }
                     countD = 1;
@@ -282,6 +303,7 @@
                                     this.area[x][y] = 0;
                                     this.$forceUpdate();
                                 }
+                                this.status = 'DELETE';
                                 this.score += countD;
                             }
                             value = this.area[i][j];
@@ -294,6 +316,7 @@
                             this.area[x][y] = 0;
                             this.$forceUpdate();
                         }
+                        this.status = 'DELETE';
                         this.score += countD;
                     }
                     countD = 1;
@@ -381,26 +404,45 @@
             },
 
             setRandomBalls() {
-                if (this.status == 'LOSE') {
-                    alert('Game over');
-                    return
-                }
-                this.setFutureBalls();
-                this.setFutureBall();
-                this.setFutureBall();
-                this.setFutureBall();
                 this.searchForAscendingLines();
                 this.searchDescLines();
                 this.checkLine();
                 this.$forceUpdate();
+                switch (this.status) {
+                    case 'ALIVE':
+                        // eslint-disable-next-line no-console
+                        console.log('ALIVE!');
+                        this.setFutureBalls();
+                        this.searchForAscendingLines();
+                        this.searchDescLines();
+                        this.checkLine();
+                        this.setFutureBall();
+                        this.setFutureBall();
+                        this.setFutureBall();
+                        this.$forceUpdate();
+                        break;
+                    case 'LOSE':
+                        alert('Game over');
+                        break;
+                    case 'DELETE':
+                        // eslint-disable-next-line no-console
+                        console.log('DELETE!');
+                        this.setFutureBalls();
+                        this.searchForAscendingLines();
+                        this.searchDescLines();
+                        this.checkLine();
+                        this.status = 'ALIVE';
+                        break;
+                    default:
+                }
             },
 
             setFutureBalls() {
                 while (this.toAppear.length != 0) {
                     let ball = this.toAppear.pop();
-                    document.getElementById(ball[1] + ' ' + ball[0]).style.width = '100%';
-                    document.getElementById(ball[1] + ' ' + ball[0]).style.height = '100%';
-                    document.getElementById(ball[1] + ' ' + ball[0]).style.margin = '0%';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.width = '80%';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.height = '80%';
+                    document.getElementById(ball[1] + ' ' + ball[0]).style.margin = '10%';
                 }
             },
 
@@ -429,12 +471,12 @@
                             x, y
                         )) {
                             let dot = this.checkInFuture(x, y);
-                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.width = '100%';
-                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.height = '100%';
-                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.margin = '0%';
+                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.width = '80%';
+                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.height = '80%';
+                            document.getElementById(this.toAppear[dot][1] + ' ' + this.toAppear[dot][0]).style.margin = '10%';
                             this.toAppear.splice(dot, 1);
                             this.setRandomBall();
-                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
+                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'none';
                             this.selected_ball = null;
                             this.setRandomBalls();
                             this.$nextTick(() => {
@@ -442,17 +484,17 @@
                             })
                         }
                     } else if (this.area[x][y] != 0 && this.checkInFuture(x, y) == 9) {
-                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
+                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'none';
                         this.selected_ball = null;
                         this.selected_ball = [x, y];
-                        document.getElementById(y + ' ' + x + 'block').style.background = 'cadetblue';
+                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'pulsing 2s infinite';
                     } else if (this.area[x][y] == 0) {
                         if (this.moveBalls(
                             this.selected_ball[0],
                             this.selected_ball[1],
                             x, y
                         )) {
-                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'white';
+                            document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'none';
                             this.selected_ball = null;
                             this.setRandomBalls();
                             this.$nextTick(() => {
@@ -463,7 +505,8 @@
                 } else {
                     if (this.area[x][y] != 0 && this.checkInFuture(x, y) == 9) {
                         this.selected_ball = [x, y];
-                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0] + 'block').style.background = 'cadetblue';
+                        document.getElementById(this.selected_ball[1] + ' ' + this.selected_ball[0]).style.animation = 'pulsing 2s infinite';
+
                     }
                 }
             },
@@ -487,6 +530,7 @@
     }
 
     .box {
+        background: darkgray;
         display: inline-block;
         border: black solid 2px;
         width: 10%;
@@ -499,8 +543,9 @@
 
     .g-col {
         display: inline-block;
-        width: 100%;
-        height: 100%;
+        margin: 10%;
+        width: 80%;
+        height: 80%;
         border-radius: 50%;
     }
 
@@ -532,5 +577,20 @@
     .g-ball-6 {
         background: deepskyblue;
         box-shadow: inset 6px 6px 7px 15px #42424238, inset 6px 6px 10px 5px #2b2a2a7d;
+    }
+
+    @keyframes pulsing {
+        0% {
+            -webkit-transform: scale(1.0, 1.0);
+            transform: scale(1.0, 1.0);
+        }
+        50% {
+            -webkit-transform: scale(0.5, 0.5);
+            transform: scale(0.5, 0.5);
+        }
+        100% {
+            -webkit-transform: scale(1.0, 1.0);
+            transform: scale(1.0, 1.0);
+        }
     }
 </style>
